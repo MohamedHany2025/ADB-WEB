@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADB Web Control</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(20, 25, 35, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+            overflow: hidden;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            font-size: 32px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #fff, #e0e0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: #00ff9d;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 157, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 255, 157, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 157, 0); }
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            padding: 30px;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: linear-gradient(135deg, rgba(40, 45, 60, 0.9) 0%, rgba(30, 35, 50, 0.9) 100%);
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.3);
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #00ff9d);
+        }
+        
+        .panel:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.4);
+        }
+        
+        .panel h2 {
+            color: #fff;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .panel h2 i {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .command-input {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .command-input input {
+            flex: 1;
+            padding: 16px 22px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(20, 25, 35, 0.8);
+            color: #fff;
+            transition: all 0.3s;
+        }
+        
+        .command-input input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            background: rgba(25, 30, 40, 0.9);
+        }
+        
+        .command-input input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .btn {
+            padding: 16px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-small {
+            padding: 12px 20px;
+            font-size: 14px;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 10px 30px rgba(0, 176, 155, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 0 10px 30px rgba(255, 65, 108, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .output-container {
+            background: #0f1419;
+            color: #00ff9d;
+            padding: 20px;
+            border-radius: 12px;
+            height: 450px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', 'Cascadia Code', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            border: 1px solid rgba(0, 255, 157, 0.1);
+            position: relative;
+        }
+        
+        .output-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .output-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .output-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        .output-line {
+            margin-bottom: 8px;
+            word-wrap: break-word;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(0, 255, 157, 0.05);
+            border-left: 3px solid #00ff9d;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .output-line.error {
+            color: #ff5555;
+            background: rgba(255, 85, 85, 0.1);
+            border-left-color: #ff5555;
+        }
+        
+        .output-line.command {
+            color: #87ceeb;
+            background: rgba(135, 206, 235, 0.1);
+            border-left-color: #87ceeb;
+        }
+        
+        .devices-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .device-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            border-left: 4px solid #667eea;
+            padding: 22px;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        
+        .device-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border-left-color: #00ff9d;
+        }
+        
+        .device-info h3 {
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 17px;
+            font-weight: 600;
+        }
+        
+        .device-info p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+        }
+        
+        .quick-commands {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .quick-command {
+            background: rgba(30, 35, 45, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .quick-command:hover {
+            background: rgba(102, 126, 234, 0.25);
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .quick-command i {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #667eea;
+        }
+        
+        .screen-container {
+            grid-column: span 2;
+            display: none;
+        }
+        
+        .screen-container.active {
+            display: block;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .screen-window {
+            background: #000;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 2px solid #667eea;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+        }
+        
+        .screen-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .screen-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 18px;
+            border-radius: 10px;
+        }
+        
+        .control-group span {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .screen-frame {
+            width: 100%;
+            height: 650px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #screenImage {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .screen-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            padding: 50px;
+        }
+        
+        .screen-placeholder i {
+            font-size: 70px;
+            margin-bottom: 25px;
+            color: #667eea;
+            opacity: 0.5;
+        }
+        
+        .device-controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 20, 30, 0.9);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 40px;
+            color: #667eea;
+            font-weight: 500;
+            font-size: 17px;
+        }
+        
+        .loading i {
+            animation: spin 1s linear infinite;
+            font-size: 24px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, rgba(30, 35, 45, 0.98) 0%, rgba(20, 25, 35, 0.98) 100%);
+            border-radius: 20px;
+            padding: 35px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+            animation: modalSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .modal-header h3 {
+            color: #fff;
+            font-size: 22px;
+            background: linear-gradient(45deg, #667eea, #00ff9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .modal-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 28px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 65, 108, 0.2);
+            color: #fff;
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.7;
+        }
+        
+        .screen-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .action-btn {
+            background: rgba(40, 45, 60, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .action-btn:hover {
+            background: rgba(102, 126, 234, 0.35);
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .action-btn i {
+            font-size: 22px;
+        }
+        
+        .connection-status {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            border-left: 4px solid #00ff9d;
+            backdrop-filter: blur(10px);
+        }
+        
+        .connection-status.active {
+            display: flex;
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .touch-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .touch-controls.active {
+            display: flex;
+        }
+        
+        .touch-btn {
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        
+        .touch-btn:hover {
+            transform: scale(1.1);
+            background: rgba(118, 75, 162, 0.9);
+        }
+        
+        .fps-counter {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ff9d;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-mobile-alt"></i>
+                <h1>ADB Web Control</h1>
+            </div>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span>Server Connected</span>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="panel">
+                <h2><i class="fas fa-terminal"></i> ADB Command</h2>
+                <div class="command-input">
+                    <input type="text" id="commandInput" placeholder="Enter ADB command (e.g., adb devices, adb shell ls)" autocomplete="off">
+                    <button class="btn" onclick="sendCommand()">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
+                
+                <div class="quick-commands">
+                    <div class="quick-command" onclick="setCommand('adb devices')">
+                        <i class="fas fa-list"></i> List Devices
+                    </div>
+                    <div class="quick-command" onclick="setCommand('adb shell pm list packages')">
+                        <i class="fas fa-box"></i> List Packages
+                    </div>
+                    <div class="quick-command" onclick="setCommand('adb logcat')">
+                        <i class="fas fa-file-alt"></i> View Logs
+                    </div>
+                    <div class="quick-command" onclick="setCommand('adb reboot')">
+                        <i class="fas fa-redo"></i> Reboot
+                    </div>
+                    <div class="quick-command" onclick="setCommand('adb install')">
+                        <i class="fas fa-download"></i> Install APK
+                    </div>
+                    <div class="quick-command" onclick="showScreenModal()">
+                        <i class="fas fa-desktop"></i> Screen View
+                    </div>
+                </div>
+                
+                <div class="loading" id="commandLoading" style="display: none;">
+                    <i class="fas fa-spinner"></i> Executing command...
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2><i class="fas fa-desktop"></i> Output Console</h2>
+                    <button class="btn btn-small btn-danger" onclick="clearOutput()">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+                <div class="output-container" id="outputConsole">
+                    <div class="output-line">🚀 Welcome to ADB Web Control!</div>
+                    <div class="output-line">Type a command or use quick commands to start.</div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2><i class="fas fa-mobile-alt"></i> Connected Devices</h2>
+                <div class="devices-list" id="devicesList">
+                    <!-- المحتوى سيتم تحميله بواسطة JavaScript -->
+                </div>
+                <button class="btn" onclick="refreshDevices()">
+                    <i class="fas fa-sync-alt"></i> Refresh Devices
+                </button>
+            </div>
+            
+            <div class="panel">
+                <h2><i class="fas fa-info-circle"></i> Device Information</h2>
+                <div id="deviceInfo">
+                    <!-- المحتوى سيتم تحميله بواسطة JavaScript -->
+                </div>
+                <div style="margin-top: 20px; border-top: 1px solid #667eea; padding-top: 20px;">
+                    <h3 style="color: #00ff9d; margin-bottom: 12px; font-size: 16px;"><i class="fas fa-terminal"></i> Scrcpy Command</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="scrcpyCommand" placeholder="scrcpy -s device_id [options]" style="flex: 1; padding: 12px; background: rgba(20, 25, 35, 0.8); border: 1px solid #667eea; border-radius: 8px; color: #fff; font-family: monospace; font-size: 13px;" readonly>
+                        <button class="btn btn-small" onclick="copyScrcpyCommand()" title="Copy command">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: rgba(255, 255, 255, 0.6);">
+                        📋 سيتم تحديثه تلقائياً عند اختيار جهاز
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2><i class="fas fa-hammer"></i> Advanced Tools</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-small btn-info" onclick="showAppsManager()" title="إدارة التطبيقات">
+                        <i class="fas fa-box"></i> التطبيقات
+                    </button>
+                    <button class="btn btn-small btn-success" onclick="showFileManager()" title="إدارة الملفات">
+                        <i class="fas fa-folder"></i> الملفات
+                    </button>
+                    <button class="btn btn-small btn-warning" onclick="showLogsViewer()" title="عرض السجلات">
+                        <i class="fas fa-scroll"></i> السجلات
+                    </button>
+                    <button class="btn btn-small btn-danger" onclick="systemReboot('system')" title="إعادة تشغيل">
+                        <i class="fas fa-sync"></i> إعادة تشغيل
+                    </button>
+                    <button class="btn btn-small" onclick="systemScreenshot()" title="لقطة شاشة">
+                        <i class="fas fa-camera"></i> لقطة
+                    </button>
+                    <button class="btn btn-small" onclick="showWifiManager()" title="التحكم بـ WiFi">
+                        <i class="fas fa-wifi"></i> WiFi
+                    </button>
+                </div>
+                <div id="advancedOutput" style="background: #0f1419; color: #00ff9d; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto; font-size: 12px; display: none;">
+                    <!-- المخرجات المتقدمة -->
+                </div>
+            </div>
+            
+            <div class="screen-container" id="screenContainer">
+                <div class="screen-window">
+                    <div class="screen-header">
+                        <h3 style="color: white; margin: 0; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-tv"></i> 
+                            <span id="currentDeviceLabel">Scrcpy - عرض الشاشة</span>
+                        </h3>
+                        <button class="btn btn-small btn-danger" onclick="stopScrcpy()">
+                            <i class="fas fa-stop"></i> إيقاف
+                        </button>
+                    </div>
+                    
+                    <div class="screen-controls">
+                        <div class="control-group">
+                            <span>التحكم:</span>
+                            <button class="btn btn-small" onclick="deviceControl('home')">
+                                <i class="fas fa-home"></i> الرئيسية
+                            </button>
+                            <button class="btn btn-small" onclick="deviceControl('back')">
+                                <i class="fas fa-arrow-left"></i> رجوع
+                            </button>
+                            <button class="btn btn-small" onclick="deviceControl('recents')">
+                                <i class="fas fa-window-restore"></i> الحديثة
+                            </button>
+                        </div>
+                        
+                        <div class="device-controls">
+                            <button class="btn btn-small btn-warning" onclick="deviceControl('power')">
+                                <i class="fas fa-power-off"></i> الطاقة
+                            </button>
+                            <button class="btn btn-small" onclick="deviceControl('volume_up')">
+                                <i class="fas fa-volume-up"></i> +
+                            </button>
+                            <button class="btn btn-small" onclick="deviceControl('volume_down')">
+                                <i class="fas fa-volume-down"></i> -
+                            </button>
+                            <button class="btn btn-small" onclick="deviceControl('menu')">
+                                <i class="fas fa-bars"></i> قائمة
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="screen-frame" id="screenFrame">
+                        <div class="screen-placeholder" id="screenPlaceholder">
+                            <i class="fas fa-mobile-alt"></i>
+                            <h3 style="color: white; margin: 15px 0;">Scrcpy متوقفة</h3>
+                            <p style="color: rgba(255, 255, 255, 0.7); max-width: 400px;">
+                                اختر جهاز لبدء scrcpy<br>
+                                ستفتح نافذة على سطح المكتب للتحكم المباشر
+                            </p>
+                            <button class="btn btn-success" onclick="showScreenModal()" style="margin-top: 25px;">
+                                <i class="fas fa-play"></i> ابدأ Scrcpy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>ADB Web Control &copy; 2026 | Real-time Screen Streaming | Use with caution</p>
+        </div>
+    </div>
+
+    <!-- Modal for Apps Manager -->
+    <div class="modal" id="appsModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-box"></i> إدارة التطبيقات</h3>
+                <button class="modal-close" onclick="closeModal('appsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">تثبيت APK:</label>
+                    <input type="file" id="apkFile" accept=".apk" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid #667eea; border-radius: 5px; color: white;">
+                    <button class="btn btn-success" style="width: 100%; margin-top: 10px;" onclick="installAPK()">
+                        <i class="fas fa-upload"></i> تثبيت
+                    </button>
+                </div>
+                <div style="border-top: 1px solid #667eea; padding-top: 15px;">
+                    <label style="display: block; margin-bottom: 10px;">التطبيقات المثبتة:</label>
+                    <button class="btn btn-info" style="width: 100%; margin-bottom: 10px;" onclick="loadInstalledApps()">
+                        <i class="fas fa-list"></i> تحميل التطبيقات
+                    </button>
+                    <div id="appsList" style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for File Manager -->
+    <div class="modal" id="filesModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-folder"></i> إدارة الملفات</h3>
+                <button class="modal-close" onclick="closeModal('filesModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">نقل ملف إلى الجهاز:</label>
+                    <input type="file" id="fileInput" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid #667eea; border-radius: 5px; color: white;">
+                    <input type="text" id="devicePath" placeholder="/sdcard/" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid #667eea; border-radius: 5px; color: white; margin-top: 10px;">
+                    <button class="btn btn-success" style="width: 100%; margin-top: 10px;" onclick="pushFile()">
+                        <i class="fas fa-upload"></i> نقل إلى الجهاز
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Logs Viewer -->
+    <div class="modal" id="logsModal">
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3><i class="fas fa-scroll"></i> السجلات</h3>
+                <button class="modal-close" onclick="closeModal('logsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <button class="btn btn-info" style="width: 100%; margin-bottom: 10px;" onclick="loadLogs()">
+                    <i class="fas fa-refresh"></i> تحديث السجلات
+                </button>
+                <div id="logsList" style="max-height: 400px; overflow-y: auto; background: #0f1419; color: #00ff9d; padding: 10px; border-radius: 5px; font-size: 12px; font-family: monospace;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for WiFi Manager -->
+    <div class="modal" id="wifiModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-wifi"></i> التحكم بـ WiFi</h3>
+                <button class="modal-close" onclick="closeModal('wifiModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn btn-success" onclick="manageWifi('on')" style="flex: 1;">
+                        <i class="fas fa-power-off"></i> تفعيل
+                    </button>
+                    <button class="btn btn-danger" onclick="manageWifi('off')" style="flex: 1;">
+                        <i class="fas fa-power-off"></i> تعطيل
+                    </button>
+                    <button class="btn btn-info" onclick="manageWifi('list')" style="flex: 1;">
+                        <i class="fas fa-list"></i> القائمة
+                    </button>
+                </div>
+                <div id="wifiList" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="connection-status" id="connectionStatus">
+        <i class="fas fa-wifi"></i>
+        <span id="connectionMessage">Connecting...</span>
+    </div>
+
+    <script>
+        let outputInterval;
+        let currentDevice = null;
+        let screenActive = false;
+        let screenStreamInterval = null;
+        let lastFrameTime = 0;
+        let frameCount = 0;
+        let fps = 0;
+        let touchMode = false;
+
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOutput();
+            refreshDevices();
+            setupKeyboardShortcuts();
+            showConnectionStatus('Connected to server', 'success');
+
+            // تحديث المخرجات كل 2 ثانية
+            outputInterval = setInterval(loadOutput, 2000);
+
+            // تحديث عداد الـ FPS كل ثانية
+            setInterval(updateFPS, 1000);
+        });
+
+        // إعداد اختصارات لوحة المفاتيح
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+Enter لإرسال الأمر
+                if (e.ctrlKey && e.key === 'Enter') {
+                    sendCommand();
+                    e.preventDefault();
+                }
+                
+                // Escape لإغلاق المودال
+                if (e.key === 'Escape') {
+                    hideScreenModal();
+                }
+                
+                // F5 لتحديث الأجهزة
+                if (e.key === 'F5') {
+                    refreshDevices();
+                    e.preventDefault();
+                }
+            });
+
+            document.getElementById('commandInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendCommand();
+                }
+            });
+        }
+
+        // تعبئة حقل الأمر من الأوامر السريعة
+        function setCommand(cmd) {
+            document.getElementById('commandInput').value = cmd;
+            document.getElementById('commandInput').focus();
+        }
+
+        // إرسال الأمر إلى الخادم
+        async function sendCommand() {
+            const command = document.getElementById('commandInput').value.trim();
+            if (!command) return;
+
+            const loading = document.getElementById('commandLoading');
+            if (loading) loading.style.display = 'flex';
+
+            try {
+                const response = await fetch('/api/send_command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ command: command })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('commandInput').value = '';
+                    loadOutput();
+                    refreshDevices();
+                    showConnectionStatus('Command executed successfully', 'success');
+                } else {
+                    addToConsole(`ERROR: ${data.error}`, 'error');
+                    showConnectionStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addToConsole(`Network error: ${error}`, 'error');
+                showConnectionStatus('Network error - Check connection', 'error');
+            } finally {
+                if (loading) loading.style.display = 'none';
+            }
+        }
+
+        // تحميل المخرجات
+        async function loadOutput() {
+            try {
+                const response = await fetch('/api/output');
+                const data = await response.json();
+
+                if (data.success) {
+                    const consoleElem = document.getElementById('outputConsole');
+                    if (!consoleElem) return;
+
+                    // الحفاظ على آخر 200 سطر فقط
+                    if (data.output.length > 200) {
+                        data.output = data.output.slice(-200);
+                    }
+
+                    consoleElem.innerHTML = '';
+
+                    data.output.forEach(line => {
+                        const lineElem = document.createElement('div');
+                        lineElem.className = 'output-line';
+
+                        if (line.includes('ERROR:')) {
+                            lineElem.classList.add('error');
+                        } else if (line.includes('$')) {
+                            lineElem.classList.add('command');
+                        }
+
+                        lineElem.textContent = line;
+                        consoleElem.appendChild(lineElem);
+                    });
+
+                    consoleElem.scrollTop = consoleElem.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Error loading output:', error);
+            }
+        }
+
+        // مسح المخرجات
+        async function clearOutput() {
+            try {
+                const response = await fetch('/api/clear_output', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    loadOutput();
+                    showConnectionStatus('Output cleared', 'success');
+                }
+            } catch (error) {
+                console.error('Error clearing output:', error);
+                showConnectionStatus('Error clearing output', 'error');
+            }
+        }
+
+        // تحديث قائمة الأجهزة
+        async function refreshDevices() {
+            const devicesList = document.getElementById('devicesList');
+            const deviceInfo = document.getElementById('deviceInfo');
+
+            if (!devicesList) return;
+
+            devicesList.innerHTML = `
+                <div class="loading" id="devicesLoading">
+                    <i class="fas fa-spinner"></i> Scanning for devices...
+                </div>
+            `;
+            
+            if (deviceInfo) {
+                deviceInfo.innerHTML = `
+                    <div class="loading" id="infoLoading">
+                        <i class="fas fa-spinner"></i> Loading device info...
+                    </div>
+                `;
+            }
+
+            try {
+                const response = await fetch('/api/devices');
+                const data = await response.json();
+
+                devicesList.innerHTML = '';
+
+                if (data.success && data.devices.length > 0) {
+                    data.devices.forEach((device, index) => {
+                        const deviceCard = document.createElement('div');
+                        deviceCard.className = 'device-card';
+                        deviceCard.innerHTML = `
+                            <div class="device-info">
+                                <h3>${device}</h3>
+                                <p>Connected via USB</p>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-small btn-success" onclick="startScreenView('${device}')">
+                                    <i class="fas fa-tv"></i> Screen
+                                </button>
+                                <button class="btn btn-small btn-info" onclick="selectDevice('${device}')">
+                                    <i class="fas fa-info-circle"></i> Info
+                                </button>
+                            </div>
+                        `;
+                        devicesList.appendChild(deviceCard);
+                        
+                        if (index === 0) {
+                            selectDevice(device);
+                        }
+                    });
+                    
+                    showConnectionStatus(`Found ${data.devices.length} device(s)`, 'success');
+                } else {
+                    devicesList.innerHTML = `
+                        <div class="device-card">
+                            <div class="device-info">
+                                <h3>No Devices Connected</h3>
+                                <p>Connect a device via USB and enable USB debugging</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    if (deviceInfo) {
+                        deviceInfo.innerHTML = `
+                            <div class="device-card">
+                                <div class="device-info">
+                                    <h3>No Device Information</h3>
+                                    <p>Connect a device to see details</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    showConnectionStatus('No devices found', 'warning');
+                }
+            } catch (error) {
+                console.error('Error loading devices:', error);
+                devicesList.innerHTML = `
+                    <div class="device-card">
+                        <div class="device-info">
+                            <h3>Error Loading Devices</h3>
+                            <p>${error.message || 'Check ADB connection'}</p>
+                        </div>
+                    </div>
+                `;
+                showConnectionStatus('Error loading devices', 'error');
+            }
+        }
+
+        // اختيار جهاز وعرض معلوماته
+        async function selectDevice(deviceId) {
+            currentDevice = deviceId;
+            // تحديث أمر scrcpy
+            document.getElementById('scrcpyCommand').value = `scrcpy -s ${deviceId} --stay-awake --show-touches`;
+            
+            const deviceInfo = document.getElementById('deviceInfo');
+
+            if (!deviceInfo) return;
+
+            try {
+                const response = await fetch(`/api/device_info?device=${encodeURIComponent(deviceId)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    let infoHTML = `
+                        <div class="device-card">
+                            <div class="device-info">
+                                <h3>${data.info.model || 'Unknown Model'}</h3>
+                                <p>Serial: ${data.device_id}</p>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    `;
+                        
+                    const infoKeys = [
+                        { key: 'android_version', label: 'Android Version', icon: 'fa-android' },
+                        { key: 'brand', label: 'Brand', icon: 'fa-trademark' },
+                        { key: 'manufacturer', label: 'Manufacturer', icon: 'fa-industry' },
+                        { key: 'device', label: 'Device', icon: 'fa-mobile-alt' },
+                        { key: 'cpu', label: 'CPU', icon: 'fa-microchip' }
+                    ];
+                        
+                    infoKeys.forEach(info => {
+                        let value = data.info[info.key] || 'N/A';
+                        if (typeof value === 'object') value = JSON.stringify(value);
+                        infoHTML += `
+                            <div style="background: rgba(40, 45, 60, 0.8); padding: 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.15);">
+                                <div style="font-size: 12px; color: #00ff9d; font-weight: bold; display: flex; align-items: center; gap: 6px;"><i class="fas ${info.icon}"></i>${info.label}</div>
+                                <div style="font-size: 15px; margin-top: 8px; color: rgba(255, 255, 255, 0.95); font-weight: 500;">${value}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    // إضافة معلومات البطارية
+                    const battery = data.info.battery || {};
+                    infoHTML += `
+                        <div style="grid-column: span 2; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(0, 255, 157, 0.1)); padding: 16px; border-radius: 10px; border: 1px solid rgba(0, 255, 157, 0.3);">
+                            <div style="font-size: 12px; color: #00ff9d; font-weight: bold; margin-bottom: 12px;"><i class="fas fa-battery-half"></i> Battery Info</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div><span style="color: #87ceeb; font-size: 13px;">Level:</span> <span style="color: white; font-weight: bold;">${battery.level || 'N/A'}</span></div>
+                                <div><span style="color: #87ceeb; font-size: 13px;">Temperature:</span> <span style="color: white; font-weight: bold;">${battery.temp || 'N/A'}</span></div>
+                                <div><span style="color: #87ceeb; font-size: 13px;">Status:</span> <span style="color: white; font-weight: bold;">${battery.status || 'N/A'}</span></div>
+                                <div><span style="color: #87ceeb; font-size: 13px;">Health:</span> <span style="color: white; font-weight: bold;">${battery.health || 'N/A'}</span></div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // إضافة معلومات الذاكرة والتخزين
+                    const ram = data.info.ram || {};
+                    const storage = data.info.storage || {};
+                    infoHTML += `
+                        <div style="grid-column: span 2; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(0, 255, 157, 0.1)); padding: 16px; border-radius: 10px; border: 1px solid rgba(0, 255, 157, 0.3);">
+                            <div style="font-size: 12px; color: #00ff9d; font-weight: bold; margin-bottom: 12px;"><i class="fas fa-memory"></i> Memory & Storage</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div><span style="color: #87ceeb; font-size: 13px;">RAM Total:</span> <span style="color: white; font-weight: bold;">${ram.total || 'N/A'}</span></div>
+                                <div><span style="color: #87ceeb; font-size: 13px;">Available:</span> <span style="color: white; font-weight: bold;">${ram.available || 'N/A'}</span></div>
+                                <div><span style="color: #87ceeb; font-size: 13px;">Storage Total:</span> <span style="color: white; font-weight: bold;">${storage.total || 'N/A'}</span></div>
+                                <div><span style="color: #87ceeb; font-size: 13px;">Storage Used:</span> <span style="color: white; font-weight: bold;">${storage.used || 'N/A'}</span></div>
+                            </div>
+                        </div>
+                    `;
+                    deviceInfo.innerHTML = infoHTML;
+                }
+            } catch (error) {
+                console.error('Error loading device info:', error);
+                deviceInfo.innerHTML = `
+                    <div class="device-card">
+                        <div class="device-info">
+                            <h3>Error Loading Device Info</h3>
+                            <p>${error.message || 'Unknown error'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // وظائف عرض الشاشة
+        function showScreenModal() {
+            document.getElementById('screenModal').classList.add('active');
+            loadScreenDevices();
+        }
+
+        function hideScreenModal() {
+            document.getElementById('screenModal').classList.remove('active');
+        }
+
+        async function loadScreenDevices() {
+            const deviceList = document.getElementById('screenDeviceList');
+            const loading = document.getElementById('screenLoading');
+            
+            deviceList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> جاري تحميل الأجهزة...</div>';
+            
+            try {
+                const response = await fetch('/api/devices');
+                const data = await response.json();
+
+                if (data.success && data.devices.length > 0) {
+                    deviceList.innerHTML = '';
+                    
+                    data.devices.forEach(device => {
+                        const deviceBtn = document.createElement('button');
+                        deviceBtn.className = 'btn btn-success';
+                        deviceBtn.style.width = '100%';
+                        deviceBtn.style.marginBottom = '12px';
+                        deviceBtn.style.justifyContent = 'flex-start';
+                        deviceBtn.innerHTML = `
+                            <i class="fas fa-mobile-alt"></i> ${device}
+                        `;
+                        deviceBtn.onclick = () => startScrcpy(device);
+                        deviceList.appendChild(deviceBtn);
+                    });
+                } else {
+                    deviceList.innerHTML = `
+                        <div class="device-card">
+                            <div class="device-info">
+                                <h3>لا توجد أجهزة</h3>
+                                <p>قم بتوصيل جهاز لعرض الشاشة</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                deviceList.innerHTML = `
+                    <div class="device-card">
+                        <div class="device-info">
+                            <h3>خطأ في تحميل الأجهزة</h3>
+                            <p>${error.message || 'تحقق من اتصال الخادم'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function startScrcpy(deviceId) {
+            hideScreenModal();
+            currentDevice = deviceId;
+            screenActive = true;
+            
+            addToConsole(`جاري بدء scrcpy للجهاز: ${deviceId}...`, 'command');
+            showConnectionStatus(`جاري الاتصال بـ scrcpy: ${deviceId}`, 'success');
+            
+            try {
+                const response = await fetch('/api/scrcpy/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: deviceId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addToConsole(`✓ تم بدء scrcpy بنجاح للجهاز: ${deviceId}`, 'command');
+                    addToConsole(`ستفتح نافذة scrcpy على سطح المكتب`, 'command');
+                    showConnectionStatus(`✓ Scrcpy جاهز: ${deviceId}`, 'success');
+                } else {
+                    addToConsole(`✗ خطأ: ${data.error}`, 'error');
+                    showConnectionStatus(`خطأ: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ في الاتصال: ${error.message}`, 'error');
+                showConnectionStatus(`خطأ في الاتصال`, 'error');
+            }
+        }
+
+        async function stopScrcpy() {
+            if (!currentDevice) return;
+            
+            try {
+                const response = await fetch('/api/scrcpy/stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addToConsole(`✓ تم إيقاف scrcpy`, 'command');
+                    showConnectionStatus(`تم إيقاف scrcpy`, 'warning');
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ في الإيقاف: ${error.message}`, 'error');
+            }
+            
+            screenActive = false;
+            currentDevice = null;
+        }
+
+        function updateFPS() {
+            // FPS counter - not needed for scrcpy since it handles its own rendering
+        }
+
+        function stopScreenView() {
+            // Deprecated - use stopScrcpy instead
+            stopScrcpy();
+        }
+
+        async function deviceControl(action) {
+            if (!currentDevice) {
+                addToConsole('✗ لم يتم تحديد جهاز', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        device: currentDevice,
+                        action: action
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const actions = {
+                        'power': 'زر الطاقة',
+                        'home': 'زر الرئيسية',
+                        'back': 'زر الرجوع',
+                        'volume_up': 'رفع الصوت',
+                        'volume_down': 'خفض الصوت',
+                        'menu': 'القائمة',
+                        'recents': 'التطبيقات الحديثة'
+                    };
+                    
+                    addToConsole(`✓ ${actions[action] || action}`, 'command');
+                    showConnectionStatus(actions[action] || `تم تنفيذ ${action}`, 'success');
+                } else {
+                    addToConsole(`✗ ${action}: ${data.error}`, 'error');
+                    showConnectionStatus(`فشل: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ: ${error.message}`, 'error');
+                showConnectionStatus(`خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        function showTouchControls(show) {
+            touchMode = show;
+            const touchControls = document.getElementById('touchControls');
+            
+            if (show) {
+                touchControls.classList.add('active');
+                showConnectionStatus('Touch controls enabled', 'success');
+            } else {
+                touchControls.classList.remove('active');
+                showConnectionStatus('Touch controls disabled', 'warning');
+            }
+        }
+
+        // نسخ أمر scrcpy إلى الحافظة
+        function copyScrcpyCommand() {
+            const scrcpyInput = document.getElementById('scrcpyCommand');
+            if (scrcpyInput.value) {
+                navigator.clipboard.writeText(scrcpyInput.value);
+                showConnectionStatus('✓ تم النسخ إلى الحافظة', 'success');
+            }
+        }
+
+        function showConnectionStatus(message, type = 'info') {
+            const status = document.getElementById('connectionStatus');
+            const messageEl = document.getElementById('connectionMessage');
+            
+            // تحديث النص
+            messageEl.textContent = message;
+            
+            // تحديث اللون حسب النوع
+            const colors = {
+                'success': '#00ff9d',
+                'error': '#ff416c',
+                'warning': '#f6d365',
+                'info': '#4facfe'
+            };
+            
+            status.style.borderLeftColor = colors[type] || colors.info;
+            
+            // إظهار الرسالة
+            status.classList.add('active');
+            
+            // إخفاء الرسالة بعد 3 ثواني
+            setTimeout(() => {
+                status.classList.remove('active');
+            }, 3000);
+        }
+
+        // إضافة سطر إلى الكونسول
+        function addToConsole(text, type = 'normal') {
+            const consoleElem = document.getElementById('outputConsole');
+            if (!consoleElem) return;
+
+            const lineElem = document.createElement('div');
+            lineElem.className = 'output-line';
+
+            if (type === 'error') {
+                lineElem.classList.add('error');
+            } else if (type === 'command') {
+                lineElem.classList.add('command');
+            }
+
+            lineElem.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            consoleElem.appendChild(lineElem);
+            consoleElem.scrollTop = consoleElem.scrollHeight;
+        }
+
+        // دالة مساعدة لإضافة الأمر للجهاز الحالي
+        function addDevicePrefix(command) {
+            if (currentDevice && command.startsWith('adb ') && !command.includes('-s ')) {
+                return command.replace('adb ', `adb -s ${currentDevice} `);
+            }
+            return command;
+        }
+
+        // === Advanced Features ===
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showAppsManager() {
+            if (!currentDevice) {
+                addToConsole('✗ حدد جهازاً أولاً', 'error');
+                return;
+            }
+            document.getElementById('appsModal').classList.add('active');
+        }
+
+        function showFileManager() {
+            if (!currentDevice) {
+                addToConsole('✗ حدد جهازاً أولاً', 'error');
+                return;
+            }
+            document.getElementById('filesModal').classList.add('active');
+        }
+
+        function showLogsViewer() {
+            if (!currentDevice) {
+                addToConsole('✗ حدد جهازاً أولاً', 'error');
+                return;
+            }
+            document.getElementById('logsModal').classList.add('active');
+        }
+
+        function showWifiManager() {
+            if (!currentDevice) {
+                addToConsole('✗ حدد جهازاً أولاً', 'error');
+                return;
+            }
+            document.getElementById('wifiModal').classList.add('active');
+        }
+
+        // تثبيت APK
+        async function installAPK() {
+            const apkFile = document.getElementById('apkFile').files[0];
+            if (!apkFile || !currentDevice) {
+                addToConsole('✗ حدد ملف APK وجهازاً', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('device', currentDevice);
+            formData.append('apk', apkFile);
+
+            addToConsole(`جاري تثبيت ${apkFile.name}...`, 'command');
+
+            try {
+                const response = await fetch('/api/apps/install', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    addToConsole(`✓ تم تثبيت التطبيق بنجاح`, 'command');
+                    document.getElementById('apkFile').value = '';
+                } else {
+                    addToConsole(`✗ فشل التثبيت: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        // تحميل التطبيقات المثبتة
+        async function loadInstalledApps() {
+            if (!currentDevice) return;
+
+            addToConsole('جاري تحميل التطبيقات...', 'command');
+            const appsList = document.getElementById('appsList');
+            appsList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+
+            try {
+                const response = await fetch(`/api/apps/list?device=${currentDevice}`);
+                const data = await response.json();
+
+                if (data.success && data.apps.length > 0) {
+                    appsList.innerHTML = data.apps.map(app => `
+                        <div style="padding: 8px; margin: 5px 0; background: rgba(102,126,234,0.1); border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 12px;">${app}</span>
+                            <button class="btn btn-small btn-danger" onclick="uninstallApp('${app}')" style="padding: 5px 10px; font-size: 11px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                    addToConsole(`✓ تم تحميل ${data.total} تطبيق`, 'command');
+                } else {
+                    appsList.innerHTML = '<p style="color: #ff5555;">لا توجد تطبيقات</p>';
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        // إلغاء تثبيت تطبيق
+        async function uninstallApp(packageName) {
+            if (!confirm(`هل تريد إلغاء تثبيت ${packageName}؟`)) return;
+
+            try {
+                const response = await fetch('/api/apps/uninstall', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice, package: packageName })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    addToConsole(`✓ تم إلغاء التطبيق`, 'command');
+                    loadInstalledApps();
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        // نقل ملف إلى الجهاز
+        async function pushFile() {
+            const file = document.getElementById('fileInput').files[0];
+            const path = document.getElementById('devicePath').value || '/sdcard/';
+
+            if (!file || !currentDevice) {
+                addToConsole('✗ حدد ملفاً وجهازاً', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('device', currentDevice);
+            formData.append('file', file);
+            formData.append('destination', path);
+
+            addToConsole(`جاري نقل ${file.name}...`, 'command');
+
+            try {
+                const response = await fetch('/api/files/push', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    addToConsole(`✓ تم النقل بنجاح إلى ${path}`, 'command');
+                    document.getElementById('fileInput').value = '';
+                } else {
+                    addToConsole(`✗ فشل النقل`, 'error');
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        // تحميل السجلات
+        async function loadLogs() {
+            if (!currentDevice) return;
+
+            addToConsole('جاري تحميل السجلات...', 'command');
+            const logsList = document.getElementById('logsList');
+            logsList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+
+            try {
+                const response = await fetch(`/api/system/logcat?device=${currentDevice}&lines=100`);
+                const data = await response.json();
+
+                if (data.success && data.logs.length > 0) {
+                    logsList.innerHTML = data.logs.map(log => `<div>${log}</div>`).join('');
+                } else {
+                    logsList.innerHTML = '<p>لا توجد سجلات</p>';
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        // إعادة تشغيل الجهاز
+        async function systemReboot(mode = 'system') {
+            if (!currentDevice) return;
+            if (!confirm('هل تريد إعادة تشغيل الجهاز؟')) return;
+
+            addToConsole(`جاري إعادة التشغيل (${mode})...`, 'command');
+
+            try {
+                const response = await fetch('/api/system/reboot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice, mode: mode })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    addToConsole(`✓ ${data.message}`, 'command');
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        // التقاط لقطة شاشة
+        async function systemScreenshot() {
+            if (!currentDevice) return;
+
+            addToConsole('جاري التقاط لقطة...', 'command');
+
+            try {
+                const response = await fetch('/api/system/screenshot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    // عرض الصورة
+                    const imgUrl = `data:image/png;base64,${data.image}`;
+                    const win = window.open();
+                    win.document.write(`<img src="${imgUrl}" style="max-width: 100%;">`);
+                    addToConsole(`✓ تم حفظ اللقطة: ${data.filename}`, 'command');
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        // إدارة WiFi
+        async function manageWifi(action) {
+            if (!currentDevice) return;
+
+            addToConsole(`جاري تنفيذ WiFi ${action}...`, 'command');
+
+            try {
+                const response = await fetch('/api/system/wifi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice, action: action })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const wifiList = document.getElementById('wifiList');
+                    wifiList.innerHTML = `<pre style="font-size: 11px;">${data.output}</pre>`;
+                    addToConsole(`✓ تم التنفيذ بنجاح`, 'command');
+                }
+            } catch (error) {
+                addToConsole(`✗ خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        // إغلاق المودالات بـ Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.active').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+                hideScreenModal();
+            }
+        });
+    </script>
+</body>
+</html>
