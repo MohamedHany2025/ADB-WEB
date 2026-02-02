@@ -853,5 +853,9 @@ if __name__ == "__main__":
     except:
         print("⚠ Scrcpy is not installed. Please install it from: https://github.com/Genymobile/scrcpy")
     
-    print(f"Server starting on http://localhost:5555")
-    app.run(host="0.0.0.0", port=5555, debug=True, threaded=True)
+    # استخدام متغير البيئة PORT (للـ Railway و Heroku)
+    port = int(os.environ.get('PORT', 5555))
+    debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
+    
+    print(f"Server starting on http://0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port, debug=debug_mode, threaded=True)
