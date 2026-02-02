@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADB Web Control - اختر الإصدار</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: slideDown 0.6s ease-out;
+        }
+        
+        .logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .header h1 {
+            color: #fff;
+            font-size: 42px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #00ff9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #aaa;
+            font-size: 18px;
+        }
+        
+        .versions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .version-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(0, 255, 157, 0.15) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .version-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(0, 255, 157, 0.6);
+            box-shadow: 0 20px 40px rgba(0, 255, 157, 0.2);
+        }
+        
+        .version-card.recommended {
+            border-color: rgba(0, 255, 157, 0.8);
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
+        }
+        
+        .version-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #00ff9d);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .version-card:hover::before,
+        .version-card.recommended::before {
+            opacity: 1;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #00ff9d, #00d4ff);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .version-title {
+            font-size: 28px;
+            color: #fff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .version-title i {
+            color: #00ff9d;
+        }
+        
+        .version-desc {
+            color: #bbb;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+        
+        .features li {
+            color: #999;
+            font-size: 13px;
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .features li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #00ff9d;
+            font-weight: bold;
+        }
+        
+        .btn-select {
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-select:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .version-card.recommended .btn-select {
+            background: linear-gradient(135deg, #00ff9d, #00d4ff);
+            color: #000;
+        }
+        
+        .version-card.recommended .btn-select:hover {
+            box-shadow: 0 10px 25px rgba(0, 255, 157, 0.4);
+        }
+        
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .quick-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .quick-links a {
+            color: #00ff9d;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .quick-links a:hover {
+            color: #00d4ff;
+            text-decoration: underline;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+            
+            .logo {
+                font-size: 50px;
+            }
+            
+            .versions-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .version-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h1>ADB Web Control Pro</h1>
+            <p>اختر الإصدار المفضل لديك</p>
+        </div>
+        
+        <div class="versions-grid">
+            <!-- V3.0 - الأفضل والأحدث -->
+            <div class="version-card recommended" onclick="selectVersion('/v3')">
+                <span class="badge">⭐ موصى به</span>
+                <div class="version-title">
+                    <i class="fas fa-star"></i> الإصدار 3.0
+                </div>
+                <p class="version-desc">الواجهة الجديدة الكاملة مع كل الميزات المتقدمة</p>
+                <ul class="features">
+                    <li>نظام Tabs متقدم (ADB + Scrcpy)</li>
+                    <li>20+ أداة متقدمة</li>
+                    <li>Command Generator ذكي</li>
+                    <li>Status Panel حي</li>
+                    <li>Responsive Design</li>
+                    <li>Dark Mode جميل</li>
+                    <li>Keyboard Shortcuts</li>
+                    <li>Animations ناعمة</li>
+                </ul>
+                <button class="btn-select">
+                    <i class="fas fa-rocket"></i> استخدم v3.0
+                </button>
+            </div>
+            
+            <!-- V2 - الإصدار الأصلي -->
+            <div class="version-card" onclick="selectVersion('/v2')">
+                <span class="badge" style="background: linear-gradient(45deg, #667eea, #764ba2);">الكلاسيكي</span>
+                <div class="version-title">
+                    <i class="fas fa-history"></i> الإصدار 2.2
+                </div>
+                <p class="version-desc">الواجهة الأصلية الموثوقة والمستقرة</p>
+                <ul class="features">
+                    <li>واجهة بسيطة وسهلة</li>
+                    <li>جميع أدوات ADB الأساسية</li>
+                    <li>موثوقة وسريعة</li>
+                    <li>استهلاك موارد أقل</li>
+                    <li>Compatible مع جميع الأجهزة</li>
+                    <li>دعم الأوامر المخصصة</li>
+                </ul>
+                <button class="btn-select">
+                    <i class="fas fa-arrow-right"></i> استخدم v2.2
+                </button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 ADB Web Control | جميع الحقوق محفوظة</p>
+            <div class="quick-links">
+                <a href="https://github.com" target="_blank">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <a href="#" onclick="showInfo('v3'); return false;">
+                    <i class="fas fa-info-circle"></i> معلومات v3.0
+                </a>
+                <a href="#" onclick="showInfo('v1'); return false;">
+                    <i class="fas fa-question-circle"></i> معلومات v2.2
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function selectVersion(version) {
+            window.location.href = version;
+        }
+        
+        function showInfo(version) {
+            if (version === 'v3') {
+                alert(`
+🚀 ADB Web Control v3.0
+
+الميزات الرئيسية:
+✓ 2 Tabs منفصلة (ADB و Scrcpy)
+✓ 20+ أداة متقدمة
+✓ Command Generator ذكي
+✓ Status Panel حي
+✓ Responsive Design
+
+اختصارات لوحة المفاتيح:
+• Ctrl+Enter: تنفيذ الأمر
+• Escape: إغلاق النوافذ
+• Tab: التنقل
+
+للمزيد، اقرأ QUICK_START_v3.md
+                `);
+            } else {
+                alert(`
+📱 ADB Web Control v2.2
+
+الإصدار الأصلي المستقر:
+✓ واجهة بسيطة وسهلة
+✓ جميع أدوات ADB الأساسية
+✓ موثوقة وسريعة
+✓ استهلاك موارد أقل
+
+مثالي للاستخدام السريع والأوامر المخصصة
+                `);
+            }
+        }
+    </script>
+</body>
+</html>

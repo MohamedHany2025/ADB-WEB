@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADB Web Control Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(20, 25, 35, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+            overflow: hidden;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            font-size: 32px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #fff, #e0e0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: #00ff9d;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 157, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 255, 157, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 157, 0); }
+        }
+        
+        /* === TABS STYLE === */
+        .tabs-container {
+            display: flex;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            background: rgba(15, 20, 30, 0.8);
+            padding: 0 30px;
+        }
+        
+        .tab-btn {
+            padding: 15px 30px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            position: relative;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tab-btn i {
+            font-size: 18px;
+        }
+        
+        .tab-btn:hover {
+            color: #fff;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .tab-btn.active {
+            color: #00ff9d;
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #00ff9d);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: linear-gradient(135deg, rgba(40, 45, 60, 0.9) 0%, rgba(30, 35, 50, 0.9) 100%);
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.3);
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #00ff9d);
+        }
+        
+        .panel:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.4);
+        }
+        
+        .panel h2 {
+            color: #fff;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .panel h2 i {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .command-input {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .command-input input {
+            flex: 1;
+            padding: 16px 22px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(20, 25, 35, 0.8);
+            color: #fff;
+            transition: all 0.3s;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+        }
+        
+        .command-input input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+            background: rgba(25, 30, 40, 0.9);
+        }
+        
+        .command-input input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .btn {
+            padding: 16px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-small {
+            padding: 12px 20px;
+            font-size: 14px;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 10px 30px rgba(0, 176, 155, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 0 10px 30px rgba(255, 65, 108, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .output-container {
+            background: #0f1419;
+            color: #00ff9d;
+            padding: 20px;
+            border-radius: 12px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', 'Cascadia Code', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            border: 1px solid rgba(0, 255, 157, 0.1);
+            position: relative;
+        }
+        
+        .output-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .output-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .output-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        .output-line {
+            margin-bottom: 6px;
+            word-wrap: break-word;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: rgba(0, 255, 157, 0.05);
+            border-left: 2px solid #00ff9d;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .output-line.error {
+            color: #ff5555;
+            background: rgba(255, 85, 85, 0.1);
+            border-left-color: #ff5555;
+        }
+        
+        .output-line.command {
+            color: #87ceeb;
+            background: rgba(135, 206, 235, 0.1);
+            border-left-color: #87ceeb;
+        }
+        
+        .output-line.success {
+            color: #00ff9d;
+            background: rgba(0, 255, 157, 0.1);
+            border-left-color: #00ff9d;
+        }
+        
+        .devices-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .device-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            border-left: 4px solid #667eea;
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+        }
+        
+        .device-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border-left-color: #00ff9d;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.25) 100%);
+        }
+        
+        .device-card.selected {
+            border-left-color: #00ff9d;
+            background: linear-gradient(135deg, rgba(0, 255, 157, 0.15) 0%, rgba(102, 126, 234, 0.15) 100%);
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+        }
+        
+        .device-info {
+            color: #fff;
+        }
+        
+        .device-info h3 {
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .device-info p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .info-box {
+            background: rgba(40, 45, 60, 0.8);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-label {
+            font-size: 11px;
+            color: #00ff9d;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .info-value {
+            font-size: 14px;
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .tool-btn {
+            background: rgba(40, 45, 60, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .tool-btn i {
+            font-size: 20px;
+        }
+        
+        .tool-btn:hover {
+            background: rgba(102, 126, 234, 0.35);
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+        
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, rgba(30, 35, 45, 0.98) 0%, rgba(20, 25, 35, 0.98) 100%);
+            border-radius: 20px;
+            padding: 35px;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+            animation: modalSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+        }
+        
+        .modal-header h3 {
+            color: #fff;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-header i {
+            color: #667eea;
+        }
+        
+        .modal-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 28px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 65, 108, 0.2);
+            color: #fff;
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #00ff9d;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(20, 25, 35, 0.8);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            background: rgba(25, 30, 40, 0.9);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 20, 30, 0.9);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 30px;
+            color: #667eea;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        .loading i {
+            animation: spin 1s linear infinite;
+            font-size: 24px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .connection-status {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            border-left: 4px solid #00ff9d;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+        
+        .connection-status.active {
+            display: flex;
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .wide-panel {
+            grid-column: 1 / -1;
+        }
+        
+        .scrcpy-info {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(0, 255, 157, 0.1));
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .scrcpy-info h3 {
+            color: #00ff9d;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+        
+        .scrcpy-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .scrcpy-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+        }
+        
+        .scrcpy-stat span:first-child {
+            color: #87ceeb;
+            font-weight: 600;
+        }
+        
+        .scrcpy-stat span:last-child {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-mobile-alt"></i>
+                <h1>ADB Web Control Pro</h1>
+            </div>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span>Server Connected</span>
+            </div>
+        </header>
+        
+        <!-- TABS -->
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="switchTab('adb')">
+                <i class="fas fa-terminal"></i> ADB Control
+            </button>
+            <button class="tab-btn" onclick="switchTab('scrcpy')">
+                <i class="fas fa-desktop"></i> Scrcpy Control
+            </button>
+        </div>
+        
+        <!-- ADB TAB -->
+        <div id="adb" class="tab-content active">
+            <div class="main-content">
+                <!-- ADB Command Input -->
+                <div class="panel">
+                    <h2><i class="fas fa-terminal"></i> ADB Command</h2>
+                    <div class="command-input">
+                        <input type="text" id="commandInput" placeholder="Enter ADB command..." autocomplete="off">
+                        <button class="btn" onclick="sendCommand()">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Commands -->
+                    <div style="margin-top: 20px;">
+                        <h3 style="color: #00ff9d; margin-bottom: 12px; font-size: 14px;">Quick Commands</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;">
+                            <button class="tool-btn" onclick="setCommand('adb devices')"><i class="fas fa-list"></i> Devices</button>
+                            <button class="tool-btn" onclick="setCommand('adb shell pm list packages')"><i class="fas fa-box"></i> Apps</button>
+                            <button class="tool-btn" onclick="setCommand('adb logcat -c')"><i class="fas fa-file-alt"></i> Clear Log</button>
+                            <button class="tool-btn" onclick="setCommand('adb shell wm size')"><i class="fas fa-ruler"></i> Resolution</button>
+                            <button class="tool-btn" onclick="setCommand('adb shell dumpsys battery')"><i class="fas fa-battery-half"></i> Battery</button>
+                            <button class="tool-btn" onclick="setCommand('adb shell getprop ro.build.version.release')"><i class="fas fa-android"></i> Android Ver</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Output Console -->
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2><i class="fas fa-desktop"></i> Output Console</h2>
+                        <button class="btn btn-small btn-danger" onclick="clearOutput()">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+                    <div class="output-container" id="outputConsole">
+                        <div class="output-line">🚀 Welcome to ADB Web Control Pro!</div>
+                        <div class="output-line">Type a command or use quick commands to start.</div>
+                    </div>
+                </div>
+                
+                <!-- Device Selection -->
+                <div class="panel">
+                    <h2><i class="fas fa-mobile-alt"></i> Connected Devices</h2>
+                    <div class="devices-list" id="devicesList">
+                        <div class="loading"><i class="fas fa-spinner"></i> Loading devices...</div>
+                    </div>
+                    <button class="btn" onclick="refreshDevices()" style="width: 100%;">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                
+                <!-- Device Information -->
+                <div class="panel">
+                    <h2><i class="fas fa-info-circle"></i> Device Information</h2>
+                    <div id="deviceInfo">
+                        <p style="text-align: center; color: rgba(255, 255, 255, 0.6);">Select a device to view information</p>
+                    </div>
+                </div>
+                
+                <!-- Advanced Tools -->
+                <div class="panel wide-panel">
+                    <h2><i class="fas fa-hammer"></i> Advanced Tools</h2>
+                    <div class="tools-grid">
+                        <button class="tool-btn btn-info" onclick="showModal('appsModal')">
+                            <i class="fas fa-box"></i> Apps Manager
+                        </button>
+                        <button class="tool-btn btn-success" onclick="showModal('filesModal')">
+                            <i class="fas fa-folder"></i> File Manager
+                        </button>
+                        <button class="tool-btn btn-warning" onclick="showModal('logsModal')">
+                            <i class="fas fa-scroll"></i> Logs Viewer
+                        </button>
+                        <button class="tool-btn btn-danger" onclick="showModal('shellModal')">
+                            <i class="fas fa-code"></i> Shell Command
+                        </button>
+                        <button class="tool-btn" onclick="showModal('rebootModal')">
+                            <i class="fas fa-sync"></i> Reboot
+                        </button>
+                        <button class="tool-btn" onclick="showModal('wifiModal')">
+                            <i class="fas fa-wifi"></i> WiFi Manager
+                        </button>
+                        <button class="tool-btn" onclick="systemScreenshot()">
+                            <i class="fas fa-camera"></i> Screenshot
+                        </button>
+                        <button class="tool-btn" onclick="showModal('textModal')">
+                            <i class="fas fa-keyboard"></i> Send Text
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SCRCPY TAB -->
+        <div id="scrcpy" class="tab-content">
+            <div class="main-content">
+                <!-- Scrcpy Control -->
+                <div class="panel wide-panel">
+                    <h2><i class="fas fa-desktop"></i> Scrcpy Control</h2>
+                    
+                    <!-- Scrcpy Info -->
+                    <div class="scrcpy-info">
+                        <h3><i class="fas fa-tv"></i> Scrcpy Status</h3>
+                        <div class="scrcpy-info-grid">
+                            <div class="scrcpy-stat">
+                                <span>Status:</span>
+                                <span id="scrcpyStatus">Not Connected</span>
+                            </div>
+                            <div class="scrcpy-stat">
+                                <span>Device:</span>
+                                <span id="scrcpyStatusDevice">None</span>
+                            </div>
+                            <div class="scrcpy-stat">
+                                <span>Resolution:</span>
+                                <span id="scrcpyResolution">N/A</span>
+                            </div>
+                            <div class="scrcpy-stat">
+                                <span>FPS:</span>
+                                <span id="scrcpyFps">0</span>
+                            </div>
+                            <div class="scrcpy-stat">
+                                <span>Bitrate:</span>
+                                <span id="scrcpyBitrate">N/A</span>
+                            </div>
+                            <div class="scrcpy-stat">
+                                <span>Connection:</span>
+                                <span id="scrcpyConnection">Disconnected</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Scrcpy Command Generator -->
+                    <div style="background: rgba(40, 45, 60, 0.8); padding: 18px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <h3 style="color: #00ff9d; margin-bottom: 12px; font-size: 14px;">Command Generator</h3>
+                        <div class="form-group">
+                            <label>Device</label>
+                            <select id="scrcpyDevice" onchange="updateScrcpyCommand()">
+                                <option value="">Select Device</option>
+                            </select>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group">
+                                <label>Resolution</label>
+                                <input type="text" id="scrcpyRes" placeholder="1920x1080" onchange="updateScrcpyCommand()" value="1920x1080">
+                            </div>
+                            <div class="form-group">
+                                <label>Bitrate (Mbps)</label>
+                                <input type="number" id="scrcpyBitrate" min="1" placeholder="8" onchange="updateScrcpyCommand()" value="8">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="scrcpyStayAwake" onchange="updateScrcpyCommand()" checked>
+                                    Stay Awake
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="scrcpyShowTouches" onchange="updateScrcpyCommand()" checked>
+                                    Show Touches
+                                </label>
+                            </div>
+                        </div>
+                        <div style="background: #0f1419; padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px solid rgba(0, 255, 157, 0.2);">
+                            <div style="color: #00ff9d; font-family: monospace; font-size: 12px; word-break: break-all;" id="scrcpyCommandDisplay">scrcpy -s [device_id] -m 1920 -b 8M --stay-awake --show-touches</div>
+                        </div>
+                        <button class="btn" style="width: 100%; margin-top: 12px;" onclick="copyScrcpyCmd()">
+                            <i class="fas fa-copy"></i> Copy Command
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Scrcpy Tools -->
+                <div class="panel">
+                    <h2><i class="fas fa-tools"></i> Control Tools</h2>
+                    <div class="tools-grid">
+                        <button class="tool-btn btn-success" onclick="startScrcpySession()">
+                            <i class="fas fa-play"></i> Start
+                        </button>
+                        <button class="tool-btn btn-danger" onclick="stopScrcpySession()">
+                            <i class="fas fa-stop"></i> Stop
+                        </button>
+                        <button class="tool-btn" onclick="sendTouchCommand('home')">
+                            <i class="fas fa-home"></i> Home
+                        </button>
+                        <button class="tool-btn" onclick="sendTouchCommand('back')">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button class="tool-btn" onclick="sendTouchCommand('power')">
+                            <i class="fas fa-power-off"></i> Power
+                        </button>
+                        <button class="tool-btn" onclick="sendTouchCommand('recents')">
+                            <i class="fas fa-layer-group"></i> Recents
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Scrcpy Advanced Options -->
+                <div class="panel">
+                    <h2><i class="fas fa-sliders-h"></i> Advanced Options</h2>
+                    <div class="form-group">
+                        <label>Scrcpy Command (Manual)</label>
+                        <textarea id="scrcpyCommandCustom" style="height: 80px; font-family: monospace; font-size: 12px;" placeholder="Enter custom scrcpy command..."></textarea>
+                    </div>
+                    <button class="btn" style="width: 100%;" onclick="executeCustomScrcpy()">
+                        <i class="fas fa-rocket"></i> Execute Custom Command
+                    </button>
+                </div>
+                
+                <!-- Scrcpy Output -->
+                <div class="panel wide-panel">
+                    <h2><i class="fas fa-list"></i> Scrcpy Output Log</h2>
+                    <div class="output-container" id="scrcpyOutput">
+                        <div class="output-line">Scrcpy session logs will appear here...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>ADB Web Control Pro v3.0 | Dual Control • ADB + Scrcpy | Advanced Device Management</p>
+        </div>
+    </div>
+    
+    <!-- MODALS -->
+    
+    <!-- Apps Manager Modal -->
+    <div class="modal" id="appsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-box"></i> Apps Manager</h3>
+                <button class="modal-close" onclick="closeModal('appsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Install APK</label>
+                    <input type="file" id="apkFile" accept=".apk">
+                </div>
+                <button class="btn btn-success" onclick="installAPK()" style="width: 100%; margin-bottom: 15px;">
+                    <i class="fas fa-upload"></i> Install APK
+                </button>
+                <button class="btn btn-info" onclick="loadInstalledApps()" style="width: 100%; margin-bottom: 15px;">
+                    <i class="fas fa-list"></i> Load Installed Apps
+                </button>
+                <div id="appsList" style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; display: none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- File Manager Modal -->
+    <div class="modal" id="filesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-folder"></i> File Manager</h3>
+                <button class="modal-close" onclick="closeModal('filesModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Push File to Device</label>
+                    <input type="file" id="fileInput">
+                </div>
+                <div class="form-group">
+                    <label>Destination Path</label>
+                    <input type="text" id="devicePath" placeholder="/sdcard/" value="/sdcard/">
+                </div>
+                <button class="btn btn-success" onclick="pushFile()" style="width: 100%;">
+                    <i class="fas fa-upload"></i> Push File
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Logs Viewer Modal -->
+    <div class="modal" id="logsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-scroll"></i> Logs Viewer</h3>
+                <button class="modal-close" onclick="closeModal('logsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Number of Lines</label>
+                    <input type="number" id="logLines" min="10" max="500" value="100">
+                </div>
+                <button class="btn btn-info" onclick="loadLogs()" style="width: 100%; margin-bottom: 15px;">
+                    <i class="fas fa-refresh"></i> Load Logs
+                </button>
+                <div id="logsList" style="max-height: 300px; overflow-y: auto; background: #0f1419; color: #00ff9d; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Shell Command Modal -->
+    <div class="modal" id="shellModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-code"></i> Shell Command</h3>
+                <button class="modal-close" onclick="closeModal('shellModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Enter Shell Command</label>
+                    <textarea id="shellCmd" style="height: 100px; font-family: monospace;" placeholder="adb shell command..."></textarea>
+                </div>
+                <button class="btn" onclick="executeShell()" style="width: 100%;">
+                    <i class="fas fa-rocket"></i> Execute
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reboot Modal -->
+    <div class="modal" id="rebootModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-sync"></i> Reboot Device</h3>
+                <button class="modal-close" onclick="closeModal('rebootModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 15px;">Select reboot mode:</p>
+                <button class="btn btn-danger" onclick="rebootDevice('system')" style="width: 100%; margin-bottom: 10px;">
+                    <i class="fas fa-sync"></i> System Reboot
+                </button>
+                <button class="btn btn-warning" onclick="rebootDevice('recovery')" style="width: 100%; margin-bottom: 10px;">
+                    <i class="fas fa-wrench"></i> Recovery Mode
+                </button>
+                <button class="btn" onclick="rebootDevice('bootloader')" style="width: 100%;">
+                    <i class="fas fa-chip"></i> Bootloader
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- WiFi Manager Modal -->
+    <div class="modal" id="wifiModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-wifi"></i> WiFi Manager</h3>
+                <button class="modal-close" onclick="closeModal('wifiModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="btn btn-success" onclick="manageWifi('on')" style="flex: 1;">
+                        <i class="fas fa-power-off"></i> Enable WiFi
+                    </button>
+                    <button class="btn btn-danger" onclick="manageWifi('off')" style="flex: 1;">
+                        <i class="fas fa-power-off"></i> Disable WiFi
+                    </button>
+                </div>
+                <button class="btn btn-info" onclick="manageWifi('list')" style="width: 100%; margin-bottom: 15px;">
+                    <i class="fas fa-list"></i> List Networks
+                </button>
+                <div id="wifiList" style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Text Input Modal -->
+    <div class="modal" id="textModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-keyboard"></i> Send Text</h3>
+                <button class="modal-close" onclick="closeModal('textModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Text to Send</label>
+                    <textarea id="textToSend" style="height: 80px;" placeholder="Enter text to send..."></textarea>
+                </div>
+                <button class="btn btn-success" onclick="sendText()" style="width: 100%;">
+                    <i class="fas fa-paper-plane"></i> Send Text
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Connection Status -->
+    <div class="connection-status" id="connectionStatus">
+        <i class="fas fa-wifi"></i>
+        <span id="connectionMessage">Connecting...</span>
+    </div>
+    
+    <script>
+        // ===== VARIABLES =====
+        let currentDevice = null;
+        let outputBuffer = [];
+        
+        // ===== TAB SWITCHING =====
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOutput();
+            refreshDevices();
+            loadScrcpyDevices();
+            setupKeyboardShortcuts();
+            showStatus('Connected to server', 'success');
+            
+            // Auto-refresh output
+            setInterval(loadOutput, 2000);
+        });
+        
+        // ===== KEYBOARD SHORTCUTS =====
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    sendCommand();
+                    e.preventDefault();
+                }
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+                }
+            });
+            
+            document.getElementById('commandInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendCommand();
+            });
+        }
+        
+        // ===== UI FUNCTIONS =====
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('connectionStatus');
+            document.getElementById('connectionMessage').textContent = message;
+            
+            const colors = {
+                'success': '#00ff9d',
+                'error': '#ff416c',
+                'warning': '#f6d365',
+                'info': '#4facfe'
+            };
+            
+            status.style.borderLeftColor = colors[type] || colors.info;
+            status.classList.add('active');
+            
+            setTimeout(() => status.classList.remove('active'), 3000);
+        }
+        
+        function showModal(id) {
+            if (!currentDevice) {
+                showStatus('Please select a device first', 'warning');
+                return;
+            }
+            document.getElementById(id).classList.add('active');
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        function addOutput(text, type = 'normal') {
+            const line = document.createElement('div');
+            line.className = 'output-line' + (type ? ` ${type}` : '');
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            document.getElementById('outputConsole').appendChild(line);
+            document.getElementById('outputConsole').scrollTop = document.getElementById('outputConsole').scrollHeight;
+        }
+        
+        // ===== ADB FUNCTIONS =====
+        function setCommand(cmd) {
+            document.getElementById('commandInput').value = cmd;
+            document.getElementById('commandInput').focus();
+        }
+        
+        async function sendCommand() {
+            const command = document.getElementById('commandInput').value.trim();
+            if (!command) return;
+            
+            addOutput(`$ ${command}`, 'command');
+            
+            try {
+                const response = await fetch('/api/send_command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('commandInput').value = '';
+                    loadOutput();
+                    showStatus('✓ Command executed', 'success');
+                } else {
+                    addOutput(`ERROR: ${data.error}`, 'error');
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addOutput(`ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadOutput() {
+            try {
+                const response = await fetch('/api/output');
+                const data = await response.json();
+                
+                if (data.success && data.output.length > 0) {
+                    const console = document.getElementById('outputConsole');
+                    const lastOutput = data.output[data.output.length - 1];
+                    
+                    if (!outputBuffer.includes(lastOutput)) {
+                        data.output.forEach(line => {
+                            if (!outputBuffer.includes(line)) {
+                                addOutput(line);
+                                outputBuffer.push(line);
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading output:', error);
+            }
+        }
+        
+        async function clearOutput() {
+            try {
+                await fetch('/api/clear_output', { method: 'POST' });
+                document.getElementById('outputConsole').innerHTML = '';
+                outputBuffer = [];
+                showStatus('✓ Output cleared', 'success');
+            } catch (error) {
+                showStatus('Error clearing output', 'error');
+            }
+        }
+        
+        async function refreshDevices() {
+            const devicesList = document.getElementById('devicesList');
+            devicesList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Loading...</div>';
+            
+            try {
+                const response = await fetch('/api/devices');
+                const data = await response.json();
+                
+                if (data.success && data.devices.length > 0) {
+                    devicesList.innerHTML = '';
+                    data.devices.forEach(device => {
+                        const card = document.createElement('div');
+                        card.className = 'device-card';
+                        card.onclick = () => selectDevice(device);
+                        card.innerHTML = `
+                            <div class="device-info">
+                                <h3><i class="fas fa-mobile-alt"></i> ${device}</h3>
+                                <p>Tap to select</p>
+                            </div>
+                        `;
+                        devicesList.appendChild(card);
+                    });
+                    showStatus(`Found ${data.devices.length} device(s)`, 'success');
+                } else {
+                    devicesList.innerHTML = '<div style="color: rgba(255,255,255,0.6); text-align: center; padding: 20px;">No devices found</div>';
+                }
+            } catch (error) {
+                devicesList.innerHTML = '<div style="color: #ff5555;">Error loading devices</div>';
+            }
+        }
+        
+        async function selectDevice(deviceId) {
+            currentDevice = deviceId;
+            
+            // Update device cards
+            document.querySelectorAll('.device-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.device-card').classList.add('selected');
+            
+            // Load info
+            try {
+                const response = await fetch(`/api/device_info?device=${deviceId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const info = data.info;
+                    const battery = info.battery || {};
+                    const ram = info.ram || {};
+                    const storage = info.storage || {};
+                    
+                    document.getElementById('deviceInfo').innerHTML = `
+                        <div class="info-grid">
+                            <div class="info-box">
+                                <div class="info-label"><i class="fas fa-android"></i> Android</div>
+                                <div class="info-value">${info.android_version}</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label"><i class="fas fa-trademark"></i> Brand</div>
+                                <div class="info-value">${info.brand}</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label"><i class="fas fa-microchip"></i> CPU</div>
+                                <div class="info-value">${info.cpu}</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label"><i class="fas fa-battery-half"></i> Battery</div>
+                                <div class="info-value">${battery.level || 'N/A'}</div>
+                            </div>
+                            <div class="info-box" style="grid-column: 1 / -1;">
+                                <div class="info-label"><i class="fas fa-memory"></i> RAM</div>
+                                <div class="info-value">${ram.total || 'N/A'} / Available: ${ram.available || 'N/A'}</div>
+                            </div>
+                            <div class="info-box" style="grid-column: 1 / -1;">
+                                <div class="info-label"><i class="fas fa-hdd"></i> Storage</div>
+                                <div class="info-value">${storage.total || 'N/A'} / Used: ${storage.used || 'N/A'}</div>
+                            </div>
+                        </div>
+                    `;
+                    showStatus(`✓ ${deviceId} selected`, 'success');
+                }
+            } catch (error) {
+                showStatus('Error loading device info', 'error');
+            }
+        }
+        
+        // ===== ADVANCED TOOLS =====
+        async function installAPK() {
+            const file = document.getElementById('apkFile').files[0];
+            if (!file || !currentDevice) {
+                showStatus('Select APK file and device', 'warning');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('device', currentDevice);
+            formData.append('apk', file);
+            
+            addOutput(`Installing ${file.name}...`, 'command');
+            
+            try {
+                const response = await fetch('/api/apps/install', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addOutput(`✓ App installed successfully`, 'success');
+                    document.getElementById('apkFile').value = '';
+                    closeModal('appsModal');
+                } else {
+                    addOutput(`ERROR: Installation failed`, 'error');
+                }
+            } catch (error) {
+                addOutput(`ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadInstalledApps() {
+            if (!currentDevice) return;
+            
+            const appsList = document.getElementById('appsList');
+            appsList.style.display = 'block';
+            appsList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+            
+            try {
+                const response = await fetch(`/api/apps/list?device=${currentDevice}`);
+                const data = await response.json();
+                
+                if (data.success && data.apps.length > 0) {
+                    appsList.innerHTML = data.apps.map(app => `
+                        <div style="padding: 8px; background: rgba(102,126,234,0.1); margin: 5px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #fff; font-size: 13px;">${app}</span>
+                            <button class="btn btn-small btn-danger" onclick="uninstallApp('${app}')">
+                                <i class="fas fa-trash"></i> Uninstall
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                appsList.innerHTML = '<div style="color: #ff5555;">Error loading apps</div>';
+            }
+        }
+        
+        async function uninstallApp(pkg) {
+            if (!confirm(`Uninstall ${pkg}?`)) return;
+            
+            try {
+                const response = await fetch('/api/apps/uninstall', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice, package: pkg })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    addOutput(`✓ Uninstalled: ${pkg}`, 'success');
+                    loadInstalledApps();
+                }
+            } catch (error) {
+                showStatus('Error uninstalling app', 'error');
+            }
+        }
+        
+        async function pushFile() {
+            const file = document.getElementById('fileInput').files[0];
+            const path = document.getElementById('devicePath').value || '/sdcard/';
+            
+            if (!file || !currentDevice) {
+                showStatus('Select file and device', 'warning');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('device', currentDevice);
+            formData.append('file', file);
+            formData.append('destination', path);
+            
+            addOutput(`Pushing ${file.name} to ${path}...`, 'command');
+            
+            try {
+                const response = await fetch('/api/files/push', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addOutput(`✓ File pushed successfully`, 'success');
+                    document.getElementById('fileInput').value = '';
+                    closeModal('filesModal');
+                }
+            } catch (error) {
+                addOutput(`ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        async function loadLogs() {
+            if (!currentDevice) return;
+            
+            const lines = document.getElementById('logLines').value;
+            const logsList = document.getElementById('logsList');
+            logsList.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+            
+            try {
+                const response = await fetch(`/api/system/logcat?device=${currentDevice}&lines=${lines}`);
+                const data = await response.json();
+                
+                if (data.success && data.logs.length > 0) {
+                    logsList.innerHTML = data.logs.map(log => `<div>${log}</div>`).join('');
+                }
+            } catch (error) {
+                logsList.innerHTML = '<div style="color: #ff5555;">Error loading logs</div>';
+            }
+        }
+        
+        async function executeShell() {
+            const cmd = document.getElementById('shellCmd').value;
+            if (!cmd || !currentDevice) {
+                showStatus('Enter command and select device', 'warning');
+                return;
+            }
+            
+            addOutput(`$ adb -s ${currentDevice} shell ${cmd}`, 'command');
+            
+            try {
+                const response = await fetch('/api/system/shell', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice, command: cmd })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    addOutput(data.output || '✓ Command executed', 'success');
+                    closeModal('shellModal');
+                }
+            } catch (error) {
+                addOutput(`ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        async function rebootDevice(mode) {
+            if (!confirm(`Reboot to ${mode}?`)) return;
+            if (!currentDevice) return;
+            
+            addOutput(`Rebooting to ${mode}...`, 'command');
+            
+            try {
+                const response = await fetch('/api/system/reboot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice, mode })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    addOutput(data.message, 'success');
+                    closeModal('rebootModal');
+                }
+            } catch (error) {
+                addOutput(`ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        async function manageWifi(action) {
+            if (!currentDevice) return;
+            
+            try {
+                const response = await fetch('/api/system/wifi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice, action })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('wifiList').innerHTML = `<pre style="font-size: 11px; color: #00ff9d;">${data.output}</pre>`;
+                    addOutput(`✓ WiFi ${action} executed`, 'success');
+                }
+            } catch (error) {
+                showStatus('Error managing WiFi', 'error');
+            }
+        }
+        
+        async function sendText() {
+            const text = document.getElementById('textToSend').value;
+            if (!text || !currentDevice) {
+                showStatus('Enter text and select device', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/system/text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice, text })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    addOutput(`✓ Text sent: "${text}"`, 'success');
+                    document.getElementById('textToSend').value = '';
+                    closeModal('textModal');
+                }
+            } catch (error) {
+                showStatus('Error sending text', 'error');
+            }
+        }
+        
+        async function systemScreenshot() {
+            if (!currentDevice) {
+                showStatus('Select a device first', 'warning');
+                return;
+            }
+            
+            addOutput('Taking screenshot...', 'command');
+            
+            try {
+                const response = await fetch('/api/system/screenshot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device: currentDevice })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const img = new Image();
+                    img.src = `data:image/png;base64,${data.image}`;
+                    const win = window.open();
+                    win.document.write(`<img src="${img.src}" style="max-width: 100%;">`);
+                    addOutput(`✓ Screenshot saved: ${data.filename}`, 'success');
+                }
+            } catch (error) {
+                addOutput(`ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        // ===== SCRCPY FUNCTIONS =====
+        async function loadScrcpyDevices() {
+            try {
+                const response = await fetch('/api/devices');
+                const data = await response.json();
+                
+                const select = document.getElementById('scrcpyDevice');
+                if (!select) {
+                    console.error('❌ scrcpyDevice select element not found');
+                    return;
+                }
+                
+                if (data.success && data.devices && data.devices.length > 0) {
+                    select.innerHTML = '<option value="">اختر جهاز - Select Device</option>';
+                    data.devices.forEach(device => {
+                        const option = document.createElement('option');
+                        option.value = device;
+                        option.textContent = device;
+                        select.appendChild(option);
+                    });
+                    showStatus(`✓ Found ${data.devices.length} device(s)`, 'success');
+                    console.log('✓ Scrcpy devices loaded:', data.devices);
+                } else {
+                    select.innerHTML = '<option value="">No devices found - لا توجد أجهزة</option>';
+                    showStatus('⚠️ No devices connected', 'warning');
+                    console.warn('⚠️ No devices found');
+                }
+            } catch (error) {
+                console.error('❌ Error loading Scrcpy devices:', error);
+                showStatus('❌ Error loading devices', 'error');
+            }
+        }
+        
+        function updateScrcpyCommand() {
+            const device = document.getElementById('scrcpyDevice').value;
+            const res = document.getElementById('scrcpyRes').value;
+            const bitrate = document.getElementById('scrcpyBitrate').value;
+            const stayAwake = document.getElementById('scrcpyStayAwake').checked;
+            const showTouches = document.getElementById('scrcpyShowTouches').checked;
+            
+            let cmd = `scrcpy -s ${device || '[device_id]'} -m ${res.split('x')[0]}`;
+            if (bitrate) cmd += ` -b ${bitrate}M`;
+            if (stayAwake) cmd += ' --stay-awake';
+            if (showTouches) cmd += ' --show-touches';
+            
+            document.getElementById('scrcpyCommandDisplay').textContent = cmd;
+        }
+        
+        function copyScrcpyCmd() {
+            const cmd = document.getElementById('scrcpyCommandDisplay').textContent;
+            
+            // حاول استخدام Clipboard API الحديثة
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(cmd).then(() => {
+                    showStatus('✓ Command copied', 'success');
+                }).catch(err => {
+                    // fallback إلى الطريقة القديمة
+                    copyToClipboardFallback(cmd);
+                });
+            } else {
+                // استخدام fallback للمتصفحات القديمة
+                copyToClipboardFallback(cmd);
+            }
+        }
+        
+        function copyToClipboardFallback(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showStatus('✓ Command copied', 'success');
+            } catch (err) {
+                showStatus('❌ Failed to copy', 'error');
+            }
+            document.body.removeChild(textarea);
+        }
+        
+        async function startScrcpySession() {
+            const device = document.getElementById('scrcpyDevice').value;
+            if (!device) {
+                showStatus('Select a device', 'warning');
+                return;
+            }
+            
+            addOutputScrcpy(`Starting Scrcpy for ${device}...`, 'command');
+            
+            try {
+                const response = await fetch('/api/scrcpy/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('scrcpyStatus').textContent = 'Running';
+                    document.getElementById('scrcpyStatusDevice').textContent = device;
+                    document.getElementById('scrcpyConnection').textContent = 'Connected';
+                    addOutputScrcpy(`✓ Scrcpy started successfully`, 'success');
+                    showStatus('✓ Scrcpy started', 'success');
+                } else {
+                    addOutputScrcpy(`ERROR: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addOutputScrcpy(`ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        async function stopScrcpySession() {
+            const device = document.getElementById('scrcpyDevice').value;
+            if (!device) return;
+            
+            try {
+                const response = await fetch('/api/scrcpy/stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('scrcpyStatus').textContent = 'Stopped';
+                    document.getElementById('scrcpyConnection').textContent = 'Disconnected';
+                    addOutputScrcpy(`✓ Scrcpy stopped`, 'success');
+                    showStatus('✓ Scrcpy stopped', 'warning');
+                }
+            } catch (error) {
+                addOutputScrcpy(`ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        async function sendTouchCommand(action) {
+            if (!currentDevice) {
+                showStatus('Select device from ADB tab first', 'warning');
+                return;
+            }
+            
+            const commands = {
+                'home': 'adb -s {device} shell input keyevent 3',
+                'back': 'adb -s {device} shell input keyevent 4',
+                'power': 'adb -s {device} shell input keyevent 26',
+                'recents': 'adb -s {device} shell input keyevent 187'
+            };
+            
+            const cmd = commands[action].replace('{device}', currentDevice);
+            
+            try {
+                const response = await fetch('/api/send_command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    addOutputScrcpy(`✓ Sent: ${action}`, 'success');
+                    showStatus(`✓ ${action} executed`, 'success');
+                }
+            } catch (error) {
+                addOutputScrcpy(`ERROR: ${error.message}`, 'error');
+            }
+        }
+        
+        async function executeCustomScrcpy() {
+            const cmd = document.getElementById('scrcpyCommandCustom').value;
+            if (!cmd) {
+                showStatus('Enter a command', 'warning');
+                return;
+            }
+            
+            addOutputScrcpy(`Executing: ${cmd}`, 'command');
+            showStatus('Check terminal output', 'info');
+        }
+        
+        function addOutputScrcpy(text, type = 'normal') {
+            const line = document.createElement('div');
+            line.className = 'output-line' + (type ? ` ${type}` : '');
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            document.getElementById('scrcpyOutput').appendChild(line);
+            document.getElementById('scrcpyOutput').scrollTop = document.getElementById('scrcpyOutput').scrollHeight;
+        }
+        
+        // Initialize on load
+        updateScrcpyCommand();
+    </script>
+</body>
+</html>
