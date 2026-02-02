@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: adb-web-control
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=production
+      - DEBUG=False
+      - PORT=8000
+    volumes:
+      - ./templates:/app/templates
+      - ./server.py:/app/server.py
+    restart: unless-stopped

@@ -26,6 +26,15 @@ def index():
 def index_v2():
     return render_template("index.html")
 
+@app.route("/health")
+def health_check():
+    """Health check endpoint for Railway"""
+    return {
+        "status": "ok",
+        "adb": check_adb_installed(),
+        "scrcpy": check_scrcpy_installed()
+    }, 200
+
 # === APIs ===
 
 @app.route("/api/send_command", methods=["POST"])
